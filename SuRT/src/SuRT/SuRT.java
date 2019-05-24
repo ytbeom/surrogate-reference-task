@@ -1,12 +1,6 @@
 package SuRT;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -14,9 +8,27 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Random;
+
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+
+import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JTextField;
 
 
 public class SuRT extends JFrame {
@@ -35,6 +47,9 @@ public class SuRT extends JFrame {
 	private Image img;
 	private Graphics img_g;
 	private boolean positionSetCompleted;
+	private String participantName;
+	private int numTask;
+	private int countTask;
 	
 	public SuRT(String filename) {
 		super("Life Enhancing Technology Lab. - Surrogate Reference Task");
@@ -58,13 +73,80 @@ public class SuRT extends JFrame {
 			e.printStackTrace();
 		}
 		
-		this.setUndecorated(false);
+		this.setUndecorated(true);
 		this.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		this.setVisible(true);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.addKeyListener(new MyKeyListener());
 		this.setFocusable(true);
+		
+		MyDialog dialog = new MyDialog(this);
+		dialog.setVisible(true);
+		dialog.setFocusable(true);
+		countTask = 0;
+		
 		MakePositionSet();
+	}
+	
+	class MyKeyListener implements KeyListener {
+		@Override
+		public void keyPressed(KeyEvent e) {
+			if (e.getKeyCode() == 37) {
+				confirmedRegion = (confirmedRegion == 0)? 0 : confirmedRegion-1;
+			}
+			else if (e.getKeyCode() == 39) {
+				confirmedRegion = (confirmedRegion == numRegion-1)? numRegion-1 : confirmedRegion+1;
+			}
+			else if (e.getKeyCode() == 38) {
+				endTime = System.currentTimeMillis();
+				SaveSuRTResult();
+				MakePositionSet();
+			}
+			repaint();
+		}
+		
+		@Override
+		public void keyTyped(KeyEvent e) {
+
+		}
+
+		@Override
+		public void keyReleased(KeyEvent e) {
+
+		}
+	}
+	
+	class MyDialog extends JDialog {
+		private static final long serialVersionUID = 1L;
+		
+		private int width = 500;
+		private int height = 80;
+		private JLabel participantNameLabel = new JLabel("피실험자 이름:", JLabel.CENTER);
+		private JTextField participantNameTextField = new JTextField(10);
+		private JLabel numTaskLabel = new JLabel("실험 횟수:", JLabel.CENTER);
+		private JTextField numTaskTextField = new JTextField(10);
+		JButton okButton = new JButton("OK");
+		
+		public MyDialog(JFrame frame) {
+			super(frame, "피실험자 이름과 실험 횟수를 입력하세요", true);
+			setLayout(new FlowLayout());
+			add(participantNameLabel, BorderLayout.CENTER);
+			add(participantNameTextField);
+			add(numTaskLabel, BorderLayout.CENTER);
+			add(numTaskTextField);
+			add(okButton);
+			setSize(width, height);
+			setLocation((SuRT.super.getWidth()-width)/2, (SuRT.super.getHeight()-height)/2);
+			
+			okButton.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					participantName = participantNameTextField.getText();
+					System.out.println(participantName.contentEquals(""));
+					System.out.println(numTaskTextField.getText());
+					setVisible(false);
+				}
+			});
+		}
 	}
 	
 	public void paint(Graphics g) {
@@ -105,39 +187,12 @@ public class SuRT extends JFrame {
 		g.drawImage(img, 0, 0, null);
 	}
 	
-	class MyKeyListener implements KeyListener {
-		@Override
-		public void keyPressed(KeyEvent e) {
-			if (e.getKeyCode() == 37) {
-				confirmedRegion = (confirmedRegion == 0)? 0 : confirmedRegion-1;
-			}
-			else if (e.getKeyCode() == 39) {
-				confirmedRegion = (confirmedRegion == numRegion-1)? numRegion-1 : confirmedRegion+1;
-			}
-			else if (e.getKeyCode() == 38) {
-				endTime = System.currentTimeMillis();
-				SaveSuRTResult();
-				MakePositionSet();
-			}
-			repaint();
-		}
-		
-		@Override
-		public void keyTyped(KeyEvent e) {
-
-		}
-
-		@Override
-		public void keyReleased(KeyEvent e) {
-
-		}
-	}
-	
 	public void MakePositionSet() {
 		isStartedNow = true;
 		confirmedRegion = 0;
 		Random random = new Random();
 		positionSetCompleted = false;
+		int circleRadius = targetSize + (int)(circleLineWidth/2);
 		
 		regionArray = new ArrayList<Region>();
 		int positionPerRegion = numDistractor/numRegion;
@@ -163,8 +218,8 @@ public class SuRT extends JFrame {
 				int tempX = 0;
 				int tempY = 0;
 				do {
-					tempX = random.nextInt(regionWidth-2*targetSize)+regionWidth*i+targetSize;
-					tempY = random.nextInt(regionHeight-2*targetSize)+targetSize;
+					tempX = random.nextInt(regionWidth-2*circleRadius)+regionWidth*i+circleRadius;
+					tempY = random.nextInt(regionHeight-2*circleRadius)+circleRadius;
 					loopEndTime = System.currentTimeMillis();
 					timeOver = ((loopEndTime - loopStartTime) > 1)? true : false;
 					overlapped = IsOverlapped(tempX, tempY, i);
@@ -199,7 +254,7 @@ public class SuRT extends JFrame {
 		//Date time = new Date();
 		//String dateString = format.format(time);
 		//String filename = "Result_"+dateString+".txt";
-		String filename = "test.csv";
+		String filename = participantName+".csv";
 		try {
 			File file = new File(filename);
 			if(file.exists() == false) 
@@ -220,9 +275,9 @@ public class SuRT extends JFrame {
 	public boolean IsOverlapped(int x, int y, int regionIndex) {
 		boolean isOverlapped = false;
 		
-		isOverlapped = regionArray.get(regionIndex).isOverlapped(x, y, (double)(2*targetSize));
+		isOverlapped = regionArray.get(regionIndex).isOverlapped(x, y, (double)(2*targetSize+circleLineWidth));
 		if (!isOverlapped && regionIndex != 0)
-			isOverlapped = regionArray.get(regionIndex-1).isOverlapped(x, y, (double)(2*targetSize));
+			isOverlapped = regionArray.get(regionIndex-1).isOverlapped(x, y, (double)(2*targetSize+circleLineWidth));
 		
 		return isOverlapped;
 	}
