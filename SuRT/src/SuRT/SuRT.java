@@ -8,8 +8,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Random;
 
 import java.awt.BasicStroke;
@@ -39,17 +40,24 @@ public class SuRT extends JFrame {
 	private int targetSize;
 	private int numRegion;
 	private float circleLineWidth;
+	
 	private ArrayList<Region> regionArray;
-	private long startTime;
-	private long endTime;
 	private int confirmedRegion;
 	private boolean isStartedNow;
+	private boolean positionSetCompleted;
+	
 	private Image img;
 	private Graphics img_g;
-	private boolean positionSetCompleted;
+	
 	private String participantName;
 	private int numTask;
-	private int countTask;
+	private int countTask;	
+	
+	private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	private Date startDate;
+	private long startTime;
+	private long endTime;
+
 	
 	public SuRT(String filename) {
 		super("Life Enhancing Technology Lab. - Surrogate Reference Task");
@@ -93,16 +101,20 @@ public class SuRT extends JFrame {
 		public void keyPressed(KeyEvent e) {
 			if (e.getKeyCode() == 37) {
 				confirmedRegion = (confirmedRegion == 0)? 0 : confirmedRegion-1;
+				repaint();
 			}
 			else if (e.getKeyCode() == 39) {
 				confirmedRegion = (confirmedRegion == numRegion-1)? numRegion-1 : confirmedRegion+1;
+				repaint();
 			}
 			else if (e.getKeyCode() == 38) {
 				endTime = System.currentTimeMillis();
 				SaveSuRTResult();
 				MakePositionSet();
 			}
-			repaint();
+			else if (e.getKeyCode() == 27) {
+				System.exit(0);
+			}
 		}
 		
 		@Override
@@ -141,8 +153,15 @@ public class SuRT extends JFrame {
 			okButton.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					participantName = participantNameTextField.getText();
-					System.out.println(participantName.contentEquals(""));
-					System.out.println(numTaskTextField.getText());
+					if (participantName.equals(""))
+						participantName = "NONAME";
+					
+					String numTaskString = numTaskTextField.getText();
+					if (numTaskString.equals(""))
+						numTask = -1;
+					else
+						numTask = Integer.parseInt(numTaskString);
+					
 					setVisible(false);
 				}
 			});
@@ -158,7 +177,6 @@ public class SuRT extends JFrame {
 			int regionWidth = super.getWidth()/numRegion;
 			int regionHeight = super.getHeight();
 			for (int i=0; i<numRegion; i++) {
-				// Draw background
 				if (i==confirmedRegion) {
 					g2.setColor(new Color(160, 160, 160));
 				}
@@ -166,20 +184,21 @@ public class SuRT extends JFrame {
 					g2.setColor(Color.BLACK);
 				}
 				g2.fillRect(regionWidth*i, 0, regionWidth, regionHeight);
-				// Draw distractor & target
-				Region tempRegion = regionArray.get(i);
+
+				Region region = regionArray.get(i);
 				g2.setStroke(new BasicStroke(circleLineWidth));
 				g2.setColor(new Color(192, 192, 192));
-				for (int j=0; j<tempRegion.getNumDistractor(); j++) {
-					if(!tempRegion.getPosition(j).getIsTarget()) {
-						g2.drawOval(tempRegion.getPosition(j).getX()-distractorSize, tempRegion.getPosition(j).getY()-distractorSize, distractorSize*2, distractorSize*2);
+				for (int j=0; j<region.getNumDistractor(); j++) {
+					if(!region.getPosition(j).getIsTarget()) {
+						g2.drawOval(region.getPosition(j).getX()-distractorSize, region.getPosition(j).getY()-distractorSize, distractorSize*2, distractorSize*2);
 					}
 					else {
-						g2.drawOval(tempRegion.getPosition(j).getX()-targetSize, tempRegion.getPosition(j).getY()-targetSize, targetSize*2, targetSize*2);
+						g2.drawOval(region.getPosition(j).getX()-targetSize, region.getPosition(j).getY()-targetSize, targetSize*2, targetSize*2);
 					}
 				}
 			}
 			if (isStartedNow) {
+				startDate = new Date();
 				startTime = System.currentTimeMillis();
 				isStartedNow = false;
 			}
@@ -190,14 +209,13 @@ public class SuRT extends JFrame {
 	public void MakePositionSet() {
 		isStartedNow = true;
 		confirmedRegion = 0;
-		Random random = new Random();
 		positionSetCompleted = false;
-		int circleRadius = targetSize + (int)(circleLineWidth/2);
 		
 		regionArray = new ArrayList<Region>();
 		int positionPerRegion = numDistractor/numRegion;
 		int remainedNumPosition = numDistractor%numRegion;
 		
+		Random random = new Random();
 		for (int i=0; i<numRegion; i++) {
 			Region region = new Region(false, false, positionPerRegion);
 			regionArray.add(region);
@@ -207,25 +225,41 @@ public class SuRT extends JFrame {
 			regionArray.get(random.nextInt(numRegion)).increaseNumDistractor();
 		}
 		
+		int targetRegion = random.nextInt(numRegion);
+		int targetIndex = random.nextInt(regionArray.get(targetRegion).getNumDistractor());
+		regionArray.get(targetRegion).setIsTargetRegion(true);
+		
+		int targetRadius = targetSize + (int)(circleLineWidth/2);
+		int distractorRadius = distractorSize + (int)(circleLineWidth/2);
+		
 		for (int i=0; i<numRegion; i++) {
 			boolean timeOver = false;
 			boolean overlapped = true;
+			boolean targetSelected = false;
 			long loopStartTime = System.currentTimeMillis();
 			long loopEndTime = System.currentTimeMillis();
+			Region region = regionArray.get(i);
 			int regionWidth = super.getWidth()/numRegion;
 			int regionHeight = super.getHeight();
-			for (int j=0; j<regionArray.get(i).getNumDistractor(); j++) {
+			for (int j=0; j<region.getNumDistractor(); j++) {
+				targetSelected = ((i == targetRegion) && (j == targetIndex))? true : false;
 				int tempX = 0;
 				int tempY = 0;
 				do {
-					tempX = random.nextInt(regionWidth-2*circleRadius)+regionWidth*i+circleRadius;
-					tempY = random.nextInt(regionHeight-2*circleRadius)+circleRadius;
+					if (!targetSelected) {
+						tempX = random.nextInt(regionWidth-2*distractorRadius)+regionWidth*i+distractorRadius;
+						tempY = random.nextInt(regionHeight-2*distractorRadius)+distractorRadius;
+					}
+					else {
+						tempX = random.nextInt(regionWidth-2*targetRadius)+regionWidth*i+targetRadius;
+						tempY = random.nextInt(regionHeight-2*targetRadius)+targetRadius;
+					}
+					overlapped = region.isOverlapped(tempX, tempY, distractorRadius, targetRadius, targetSelected);
 					loopEndTime = System.currentTimeMillis();
 					timeOver = ((loopEndTime - loopStartTime) > 1)? true : false;
-					overlapped = IsOverlapped(tempX, tempY, i);
 				} while (overlapped & !timeOver);
 				if (!overlapped) {
-					regionArray.get(i).setPosition(tempX, tempY);
+					region.setPosition(tempX, tempY, targetSelected);
 					timeOver = false;
 				}
 				else {
@@ -238,11 +272,7 @@ public class SuRT extends JFrame {
 				continue;
 			}
 		}
-		
-		int targetRegion = random.nextInt(numRegion);
-		int targetIndex = random.nextInt(regionArray.get(targetRegion).getNumDistractor());
-		regionArray.get(targetRegion).setIsTargetRegion(true);
-		regionArray.get(targetRegion).getPositionSet().get(targetIndex).setIsTarget();
+
 		positionSetCompleted = true;
 		repaint();
 	}
@@ -250,19 +280,15 @@ public class SuRT extends JFrame {
 	public void SaveSuRTResult() {
 		long responseTime = endTime - startTime;
 		boolean success = regionArray.get(confirmedRegion).getIsTargetRegion();
-		//SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		//Date time = new Date();
-		//String dateString = format.format(time);
-		//String filename = "Result_"+dateString+".txt";
+		String dateString = format.format(startDate);
+		
 		String filename = participantName+".csv";
 		try {
 			File file = new File(filename);
 			if(file.exists() == false) 
 				file.createNewFile();
 			BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, true));
-			bufferedWriter.write("Response Time: "+String.valueOf(responseTime*0.001));
-			bufferedWriter.write(",");
-			bufferedWriter.write(String.valueOf(success));
+			bufferedWriter.write(dateString + "," + String.valueOf(responseTime*0.001) + "," + String.valueOf(success));
 			bufferedWriter.newLine();
 			bufferedWriter.flush();
 			
@@ -270,16 +296,10 @@ public class SuRT extends JFrame {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-	
-	public boolean IsOverlapped(int x, int y, int regionIndex) {
-		boolean isOverlapped = false;
 		
-		isOverlapped = regionArray.get(regionIndex).isOverlapped(x, y, (double)(2*targetSize+circleLineWidth));
-		if (!isOverlapped && regionIndex != 0)
-			isOverlapped = regionArray.get(regionIndex-1).isOverlapped(x, y, (double)(2*targetSize+circleLineWidth));
-		
-		return isOverlapped;
+		countTask++;
+		if (countTask == numTask)
+			System.exit(0);
 	}
 	
 	public static void main (String[] args) {

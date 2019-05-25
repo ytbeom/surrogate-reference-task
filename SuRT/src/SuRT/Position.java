@@ -5,10 +5,10 @@ public class Position {
 	private int y;
 	private boolean isTarget;
 	
-	public Position(int x, int y) {
+	public Position(int x, int y, boolean isTarget) {
 		this.x = x;
 		this.y = y;
-		isTarget = false;
+		this.isTarget = isTarget;
 	}
 	
 	public int getX() {
@@ -21,9 +21,5 @@ public class Position {
 	
 	public boolean getIsTarget() {
 		return isTarget;
-	}
-	
-	public void setIsTarget() {
-		isTarget = true;
 	}
 }
