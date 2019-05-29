@@ -67,6 +67,7 @@ public class SuRT extends JFrame {
 			String line = "";
 			
 			if((line = bufferedReader.readLine()) != null) {
+				line = bufferedReader.readLine();
 				String array[] = line.split(",");
 				numDistractor = Integer.parseInt(array[0]);
 				distractorSize = Integer.parseInt(array[1]);
@@ -85,35 +86,42 @@ public class SuRT extends JFrame {
 		this.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		this.setVisible(true);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.addKeyListener(new MyKeyListener());
+		this.addKeyListener(new MainKeyListener());
 		this.setFocusable(true);
 		
 		MyDialog dialog = new MyDialog(this);
 		dialog.setVisible(true);
-		dialog.setFocusable(true);
 		countTask = 0;
 		
 		MakePositionSet();
 	}
 	
-	class MyKeyListener implements KeyListener {
+	class MainKeyListener implements KeyListener {
 		@Override
 		public void keyPressed(KeyEvent e) {
 			// key input 들어온 적 있는지 검사, confirmedRegion을 -1로 했다가 (그럼 paint에서 -1이면 안그리는걸로)
 			// 왼쪽 누르면 numRegion/2-1 오른쪽 누르면 numRegion/2
 			// 홀수면 뭐 누르든간에 가운데에 뜨게끔
 			if (e.getKeyCode() == 37) {
-				confirmedRegion = (confirmedRegion == 0)? 0 : confirmedRegion-1;
+				if (confirmedRegion != -1)
+					confirmedRegion = (confirmedRegion == 0)? 0 : confirmedRegion-1;
+				else
+					confirmedRegion = (numRegion-1)/2;
 				repaint();
 			}
 			else if (e.getKeyCode() == 39) {
-				confirmedRegion = (confirmedRegion == numRegion-1)? numRegion-1 : confirmedRegion+1;
+				if (confirmedRegion != -1)
+					confirmedRegion = (confirmedRegion == numRegion-1)? numRegion-1 : confirmedRegion+1;
+				else
+					confirmedRegion = numRegion/2;
 				repaint();
 			}
 			else if (e.getKeyCode() == 38) {
-				endTime = System.currentTimeMillis();
-				SaveSuRTResult();
-				MakePositionSet();
+				if (confirmedRegion != -1) {
+					endTime = System.currentTimeMillis();
+					SaveSuRTResult();
+					MakePositionSet();
+				}
 			}
 			else if (e.getKeyCode() == 27) {
 				System.exit(0);
@@ -141,7 +149,6 @@ public class SuRT extends JFrame {
 		private JLabel numTaskLabel = new JLabel("실험 횟수", JLabel.CENTER);
 		private JTextField numTaskTextField = new JTextField(10);
 		JButton okButton = new JButton("OK");
-		// 여기에도 key listener 추가해서 actionPerformed 똑같이 수행되게끔
 		
 		public MyDialog(JFrame frame) {
 			super(frame, "피실험자 이름과 실험 횟수를 입력하세요", true);
@@ -153,22 +160,44 @@ public class SuRT extends JFrame {
 			add(okButton);
 			setSize(width, height);
 			setLocation((SuRT.super.getWidth()-width)/2, (SuRT.super.getHeight()-height)/2);
+			this.setFocusable(true);
 			
 			okButton.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					participantName = participantNameTextField.getText();
-					if (participantName.equals(""))
-						participantName = "NONAME";
-					
-					String numTaskString = numTaskTextField.getText();
-					if (numTaskString.equals(""))
-						numTask = -1;
-					else
-						numTask = Integer.parseInt(numTaskString);
-					
-					setVisible(false);
+					SaveDialogResult();
 				}
 			});
+			
+			KeyListener enterListener = new KeyListener() {
+				public void keyPressed(KeyEvent e) {
+					if (e.getKeyCode() == 10)
+						SaveDialogResult();
+				}
+				
+				@Override
+				public void keyTyped(KeyEvent e) {}
+
+				@Override
+				public void keyReleased(KeyEvent e) {}
+			};
+			
+			this.addKeyListener(enterListener);
+			participantNameTextField.addKeyListener(enterListener);
+			numTaskTextField.addKeyListener(enterListener);
+		}
+		
+		public void SaveDialogResult() {
+			participantName = participantNameTextField.getText();
+			if (participantName.equals(""))
+				participantName = "NONAME";
+			
+			String numTaskString = numTaskTextField.getText();
+			if (numTaskString.equals(""))
+				numTask = -1;
+			else
+				numTask = Integer.parseInt(numTaskString);
+			
+			this.setVisible(false);
 		}
 	}
 	
@@ -213,7 +242,7 @@ public class SuRT extends JFrame {
 	
 	public void MakePositionSet() {
 		isStartedNow = true;
-		confirmedRegion = 0;
+		confirmedRegion = -1;
 		positionSetCompleted = false;
 		
 		regionArray = new ArrayList<Region>();
