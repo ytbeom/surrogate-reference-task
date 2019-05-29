@@ -53,7 +53,7 @@ public class SuRT extends JFrame {
 	private int numTask;
 	private int countTask;	
 	
-	private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 	private Date startDate;
 	private long startTime;
 	private long endTime;
@@ -99,6 +99,9 @@ public class SuRT extends JFrame {
 	class MyKeyListener implements KeyListener {
 		@Override
 		public void keyPressed(KeyEvent e) {
+			// key input 들어온 적 있는지 검사, confirmedRegion을 -1로 했다가 (그럼 paint에서 -1이면 안그리는걸로)
+			// 왼쪽 누르면 numRegion/2-1 오른쪽 누르면 numRegion/2
+			// 홀수면 뭐 누르든간에 가운데에 뜨게끔
 			if (e.getKeyCode() == 37) {
 				confirmedRegion = (confirmedRegion == 0)? 0 : confirmedRegion-1;
 				repaint();
@@ -133,14 +136,15 @@ public class SuRT extends JFrame {
 		
 		private int width = 500;
 		private int height = 80;
-		private JLabel participantNameLabel = new JLabel("�ǽ����� �̸�:", JLabel.CENTER);
+		private JLabel participantNameLabel = new JLabel("피실험자 이름:", JLabel.CENTER);
 		private JTextField participantNameTextField = new JTextField(10);
-		private JLabel numTaskLabel = new JLabel("���� Ƚ��:", JLabel.CENTER);
+		private JLabel numTaskLabel = new JLabel("실험 횟수", JLabel.CENTER);
 		private JTextField numTaskTextField = new JTextField(10);
 		JButton okButton = new JButton("OK");
+		// 여기에도 key listener 추가해서 actionPerformed 똑같이 수행되게끔
 		
 		public MyDialog(JFrame frame) {
-			super(frame, "�ǽ����� �̸��� ���� Ƚ���� �Է��ϼ���", true);
+			super(frame, "피실험자 이름과 실험 횟수를 입력하세요", true);
 			setLayout(new FlowLayout());
 			add(participantNameLabel, BorderLayout.CENTER);
 			add(participantNameTextField);
@@ -174,6 +178,7 @@ public class SuRT extends JFrame {
 		Graphics2D g2 = (Graphics2D)img_g;
 		
 		if (positionSetCompleted) {
+			// key input 들어온 적 있는지 검사해서 highlight 안하는게 필요함, 들어온 적 있으면 highlight
 			int regionWidth = super.getWidth()/numRegion;
 			int regionHeight = super.getHeight();
 			for (int i=0; i<numRegion; i++) {
