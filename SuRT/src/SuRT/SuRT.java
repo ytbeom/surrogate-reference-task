@@ -97,7 +97,7 @@ public class SuRT extends JFrame {
 	}
 	
 	class MainKeyListener implements KeyListener {
-		@Override
+		@Override 
 		public void keyPressed(KeyEvent e) {
 			if (e.getKeyCode() == 37) {
 				if (confirmedRegion != -1)
@@ -141,14 +141,14 @@ public class SuRT extends JFrame {
 		
 		private int width = 500;
 		private int height = 80;
-		private JLabel participantNameLabel = new JLabel("ÇÇ½ÇÇèÀÚ ÀÌ¸§: ", JLabel.CENTER);
+		private JLabel participantNameLabel = new JLabel("ï¿½Ç½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½: ", JLabel.CENTER);
 		private JTextField participantNameTextField = new JTextField(10);
-		private JLabel numTaskLabel = new JLabel("½ÇÇè È½¼ö: ", JLabel.CENTER);
+		private JLabel numTaskLabel = new JLabel("ï¿½ï¿½ï¿½ï¿½ È½ï¿½ï¿½: ", JLabel.CENTER);
 		private JTextField numTaskTextField = new JTextField(10);
 		JButton okButton = new JButton("OK");
 		
 		public MyDialog(JFrame frame) {
-			super(frame, "ÇÇ½ÇÇèÀÚ ÀÌ¸§°ú ½ÇÇè È½¼ö¸¦ ÀÔ·ÂÇÏ¼¼¿ä.", true);
+			super(frame, "ï¿½Ç½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È½ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½.", true);
 			setLayout(new FlowLayout());
 			add(participantNameLabel, BorderLayout.CENTER);
 			add(participantNameTextField);
