@@ -97,7 +97,7 @@ public class SuRT extends JFrame {
 	}
 	
 	class MainKeyListener implements KeyListener {
-		@Override 
+		@Override
 		public void keyPressed(KeyEvent e) {
 			if (e.getKeyCode() == 37) {
 				if (confirmedRegion != -1)
