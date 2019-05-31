@@ -147,8 +147,12 @@ public class SuRT extends JFrame {
 		private JLabel numTaskLabel = new JLabel("# of Trial: ", JLabel.CENTER);
 		private JTextField numTaskTextField = new JTextField(10);
 		private JButton okButton = new JButton("OK");
-		private ImageIcon logoImg = new ImageIcon("Logo.png");
-		private JLabel imageBox = new JLabel(logoImg);
+		private ImageIcon lineImageIcon = new ImageIcon("img/Line.png");
+		private Image lineImage = lineImageIcon.getImage().getScaledInstance(width-40, 15, java.awt.Image.SCALE_SMOOTH);
+		private JLabel lineImageBox = new JLabel(new ImageIcon(lineImage));
+		private ImageIcon logoImageIcon = new ImageIcon("img/Logo.png");
+		private Image logoImage = logoImageIcon.getImage().getScaledInstance(width/2, width/2*logoImageIcon.getIconHeight()/logoImageIcon.getIconWidth(), java.awt.Image.SCALE_SMOOTH);
+		private JLabel logoImageBox = new JLabel(new ImageIcon(logoImage));
 		
 		public MyDialog(JFrame frame) {
 			super(frame, "SuRT Setting Dialog", true);
@@ -162,7 +166,8 @@ public class SuRT extends JFrame {
 			add(numTaskLabel, BorderLayout.CENTER);
 			add(numTaskTextField);
 			add(okButton);
-			add(imageBox);
+			add(lineImageBox);
+			add(logoImageBox);
 			
 			okButton.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
