@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -147,10 +148,12 @@ public class SuRT extends JFrame {
 		private JLabel numTaskLabel = new JLabel("# of Trial: ", JLabel.CENTER);
 		private JTextField numTaskTextField = new JTextField(10);
 		private JButton okButton = new JButton("OK");
-		private ImageIcon lineImageIcon = new ImageIcon("img/Line.png");
+		private URL lineImageURL = MyDialog.class.getClassLoader().getResource("Line.png");
+		private ImageIcon lineImageIcon = new ImageIcon(lineImageURL);
 		private Image lineImage = lineImageIcon.getImage().getScaledInstance(width-40, 15, java.awt.Image.SCALE_SMOOTH);
 		private JLabel lineImageBox = new JLabel(new ImageIcon(lineImage));
-		private ImageIcon logoImageIcon = new ImageIcon("img/Logo.png");
+		private URL logoImageURL = MyDialog.class.getClassLoader().getResource("Logo.png");
+		private ImageIcon logoImageIcon = new ImageIcon(logoImageURL);
 		private Image logoImage = logoImageIcon.getImage().getScaledInstance(width/2, width/2*logoImageIcon.getIconHeight()/logoImageIcon.getIconWidth(), java.awt.Image.SCALE_SMOOTH);
 		private JLabel logoImageBox = new JLabel(new ImageIcon(logoImage));
 		
