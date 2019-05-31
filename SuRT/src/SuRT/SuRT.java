@@ -25,6 +25,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -140,24 +141,28 @@ public class SuRT extends JFrame {
 		private static final long serialVersionUID = 1L;
 		
 		private int width = 500;
-		private int height = 80;
-		private JLabel participantNameLabel = new JLabel("�ǽ����� �̸�: ", JLabel.CENTER);
+		private int height = 150;
+		private JLabel participantNameLabel = new JLabel("Participant Name: ", JLabel.CENTER);
 		private JTextField participantNameTextField = new JTextField(10);
-		private JLabel numTaskLabel = new JLabel("���� Ƚ��: ", JLabel.CENTER);
+		private JLabel numTaskLabel = new JLabel("# of Trial: ", JLabel.CENTER);
 		private JTextField numTaskTextField = new JTextField(10);
-		JButton okButton = new JButton("OK");
+		private JButton okButton = new JButton("OK");
+		private ImageIcon logoImg = new ImageIcon("Logo.png");
+		private JLabel imageBox = new JLabel(logoImg);
 		
 		public MyDialog(JFrame frame) {
-			super(frame, "�ǽ����� �̸��� ���� Ƚ���� �Է��ϼ���.", true);
+			super(frame, "SuRT Setting Dialog", true);
 			setLayout(new FlowLayout());
+			setSize(width, height);
+			setLocation((SuRT.super.getWidth()-width)/2, (SuRT.super.getHeight()-height)/2);
+			this.setFocusable(true);
+			
 			add(participantNameLabel, BorderLayout.CENTER);
 			add(participantNameTextField);
 			add(numTaskLabel, BorderLayout.CENTER);
 			add(numTaskTextField);
 			add(okButton);
-			setSize(width, height);
-			setLocation((SuRT.super.getWidth()-width)/2, (SuRT.super.getHeight()-height)/2);
-			this.setFocusable(true);
+			add(imageBox);
 			
 			okButton.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
