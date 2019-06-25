@@ -146,7 +146,6 @@ public class SuRT extends JFrame {
 		public void mouseClicked(MouseEvent e) {
 			// TODO Auto-generated method stub
 			confirmedRegion = (int)(e.getX()/(SuRT.super.getWidth()/numRegion));
-			System.out.println(confirmedRegion);
 			endTime = System.currentTimeMillis();
 			SaveSuRTResult();
 			MakePositionSet();
