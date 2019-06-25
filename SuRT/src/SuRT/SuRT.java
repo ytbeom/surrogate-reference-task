@@ -25,6 +25,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -89,9 +91,10 @@ public class SuRT extends JFrame {
 		this.setVisible(true);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.addKeyListener(new MainKeyListener());
+		this.addMouseListener(new MainMouseListener());
 		this.setFocusable(true);
 		
-		MyDialog dialog = new MyDialog(this);
+		SettingDialog dialog = new SettingDialog(this);
 		dialog.setVisible(true);
 		countTask = 0;
 		
@@ -138,7 +141,43 @@ public class SuRT extends JFrame {
 		}
 	}
 	
-	class MyDialog extends JDialog {
+	class MainMouseListener implements MouseListener {
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			// TODO Auto-generated method stub
+			confirmedRegion = (int)(e.getX()/(SuRT.super.getWidth()/numRegion));
+			System.out.println(confirmedRegion);
+			endTime = System.currentTimeMillis();
+			SaveSuRTResult();
+			MakePositionSet();
+		}
+
+		@Override
+		public void mousePressed(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseExited(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+	}
+	
+	class SettingDialog extends JDialog {
 		private static final long serialVersionUID = 1L;
 		
 		private int width = 500;
@@ -148,16 +187,16 @@ public class SuRT extends JFrame {
 		private JLabel numTaskLabel = new JLabel("# of Trial: ", JLabel.CENTER);
 		private JTextField numTaskTextField = new JTextField(10);
 		private JButton okButton = new JButton("OK");
-		private URL lineImageURL = MyDialog.class.getClassLoader().getResource("Line.png");
+		private URL lineImageURL = SettingDialog.class.getClassLoader().getResource("Line.png");
 		private ImageIcon lineImageIcon = new ImageIcon(lineImageURL);
 		private Image lineImage = lineImageIcon.getImage().getScaledInstance(width-40, 15, java.awt.Image.SCALE_SMOOTH);
 		private JLabel lineImageBox = new JLabel(new ImageIcon(lineImage));
-		private URL logoImageURL = MyDialog.class.getClassLoader().getResource("Logo.png");
+		private URL logoImageURL = SettingDialog.class.getClassLoader().getResource("Logo.png");
 		private ImageIcon logoImageIcon = new ImageIcon(logoImageURL);
 		private Image logoImage = logoImageIcon.getImage().getScaledInstance(width/2, width/2*logoImageIcon.getIconHeight()/logoImageIcon.getIconWidth(), java.awt.Image.SCALE_SMOOTH);
 		private JLabel logoImageBox = new JLabel(new ImageIcon(logoImage));
 		
-		public MyDialog(JFrame frame) {
+		public SettingDialog(JFrame frame) {
 			super(frame, "SuRT Setting Dialog", true);
 			setLayout(new FlowLayout());
 			setSize(width, height);
@@ -224,13 +263,13 @@ public class SuRT extends JFrame {
 					g2.setColor(new Color(160, 160, 160));
 				}
 				else {
-					g2.setColor(Color.BLACK);
+					g2.setColor(Color.WHITE);
 				}
 				g2.fillRect(regionWidth*i, 0, regionWidth, regionHeight);
 
 				Region region = regionArray.get(i);
 				g2.setStroke(new BasicStroke(circleLineWidth));
-				g2.setColor(new Color(192, 192, 192));
+				g2.setColor(Color.BLACK);
 				for (int j=0; j<region.getNumDistractor(); j++) {
 					if(!region.getPosition(j).getIsTarget()) {
 						g2.drawOval(region.getPosition(j).getX()-distractorSize, region.getPosition(j).getY()-distractorSize, distractorSize*2, distractorSize*2);
