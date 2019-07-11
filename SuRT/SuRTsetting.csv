@@ -1,2 +1,2 @@
-전체 원 개수,Distractor 반지름,Target 반지름,영역 개수,원의 선 두께
+Number of Target + Distractor,Distractor Radius,Target Radius,Number of areas,Line Width
 50,40,150,5,10
