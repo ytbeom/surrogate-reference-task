@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Random;
 
 import java.awt.BasicStroke;
@@ -58,33 +57,12 @@ public class SuRT extends JFrame {
 	private int countTask;	
 	
 	private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-	private Date startDate;
 	private long startTime;
 	private long endTime;
-
+	private BufferedWriter bufferedWriter;
 	
-	public SuRT(String filename) {
+	public SuRT(String inputFileName) {
 		super("Life Enhancing Technology Lab. - Surrogate Reference Task");
-		try {
-			File file = new File(filename);
-			BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
-			String line = "";
-			
-			if((line = bufferedReader.readLine()) != null) {
-				line = bufferedReader.readLine();
-				String array[] = line.split(",");
-				numDistractor = Integer.parseInt(array[0]);
-				distractorSize = Integer.parseInt(array[1]);
-				targetSize = Integer.parseInt(array[2]);
-				numRegion = Integer.parseInt(array[3]);
-				circleLineWidth = Float.parseFloat(array[4]);
-			}
-			bufferedReader.close();
-		} catch(FileNotFoundException e) {
-			e.printStackTrace();
-		} catch(IOException e) {
-			e.printStackTrace();
-		}
 		
 		this.setUndecorated(true);
 		this.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -97,6 +75,56 @@ public class SuRT extends JFrame {
 		SettingDialog dialog = new SettingDialog(this);
 		dialog.setVisible(true);
 		countTask = 0;
+
+		try {
+			File inputFile = new File(inputFileName);
+			BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
+			
+			String outputFileName = participantName+".csv";
+			File outputFile = new File(outputFileName);
+			if(outputFile.exists() == false) 
+				outputFile.createNewFile();
+			bufferedWriter = new BufferedWriter(new FileWriter(outputFile, true));
+			
+			// Column Header 저장
+			String line = bufferedReader.readLine();
+			String columnHeaderArray[] = line.split(",");
+			bufferedWriter.write("Experiment start time" + ",");
+			for (int i=0; i<columnHeaderArray.length; i++)
+				bufferedWriter.write(columnHeaderArray[i] + ",");
+			bufferedWriter.newLine();
+			bufferedWriter.flush();
+			
+			// Parameter Value 저장
+			line = bufferedReader.readLine();
+			String array[] = line.split(",");
+			bufferedWriter.write(format.format(System.currentTimeMillis()) + ",");
+			for (int i=0; i<array.length; i++)
+				bufferedWriter.write(array[i] + ",");
+			bufferedWriter.newLine();
+			bufferedWriter.flush();
+			
+			// Parameter 세팅
+			numDistractor = Integer.parseInt(array[0]);
+			distractorSize = Integer.parseInt(array[1]);
+			targetSize = Integer.parseInt(array[2]);
+			numRegion = Integer.parseInt(array[3]);
+			circleLineWidth = Float.parseFloat(array[4]);
+			
+			// 결과 column Header 저장
+			bufferedWriter.newLine();
+			bufferedWriter.write("experiment set start time" + ",");
+			bufferedWriter.write("response time" + ",");
+			bufferedWriter.write("success" + ",");
+			bufferedWriter.newLine();
+			bufferedWriter.flush();
+			
+			bufferedReader.close();
+		} catch(FileNotFoundException e) {
+			e.printStackTrace();
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
 		
 		MakePositionSet();
 	}
@@ -126,6 +154,12 @@ public class SuRT extends JFrame {
 				}
 			}
 			else if (e.getKeyCode() == 27) {
+				try {
+					bufferedWriter.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				System.exit(0);
 			}
 		}
@@ -279,7 +313,6 @@ public class SuRT extends JFrame {
 				}
 			}
 			if (isStartedNow) {
-				startDate = new Date();
 				startTime = System.currentTimeMillis();
 				isStartedNow = false;
 			}
@@ -361,26 +394,25 @@ public class SuRT extends JFrame {
 	public void SaveSuRTResult() {
 		long responseTime = endTime - startTime;
 		boolean success = regionArray.get(confirmedRegion).getIsTargetRegion();
-		String dateString = format.format(startDate);
 		
-		String filename = participantName+".csv";
 		try {
-			File file = new File(filename);
-			if(file.exists() == false) 
-				file.createNewFile();
-			BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, true));
-			bufferedWriter.write(dateString + "," + String.valueOf(responseTime*0.001) + "," + String.valueOf(success));
+			bufferedWriter.write(format.format(startTime) + "," + String.valueOf(responseTime*0.001) + "," + String.valueOf(success));
 			bufferedWriter.newLine();
 			bufferedWriter.flush();
-			
-			bufferedWriter.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
 		countTask++;
-		if (countTask == numTask)
+		if (countTask == numTask) {
+			try {
+				bufferedWriter.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			System.exit(0);
+		}
 	}
 	
 	public static void main (String[] args) {
