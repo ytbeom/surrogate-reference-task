@@ -6,12 +6,15 @@ public class Region {
 	private boolean isTargetRegion;
 	private int numDistractor;
 	private ArrayList<Position> positionSet;
+	private int leftX;
+	private int rightX;
 	
-	public Region (boolean isHighlighted, boolean isTargetRegion, int numDistractor) {
-
+	public Region (boolean isHighlighted, boolean isTargetRegion, int numDistractor, int leftX, int rightX) {
 		this.isTargetRegion = isTargetRegion;
 		this.numDistractor = numDistractor;
 		this.positionSet = new ArrayList<Position>();
+		this.leftX = leftX;
+		this.rightX = rightX;
 	}
 	
 	public boolean getIsTargetRegion() {
@@ -25,7 +28,7 @@ public class Region {
 	public int getNumDistractor() {
 		return numDistractor;
 	}
-	
+
 	public void increaseNumDistractor() {
 		numDistractor++;
 	}
@@ -45,6 +48,14 @@ public class Region {
 	public void resetPositionSet() {
 		for (int i=positionSet.size()-1; i>=0; i--) 
 			positionSet.remove(i);
+	}
+	
+	public int getLeftX() {
+		return leftX;
+	}
+
+	public int getRightX() {
+		return rightX;
 	}
 	
 	public boolean isOverlapped(int x, int y, int distractorRadius, int targetRadius, boolean targetSelected) {

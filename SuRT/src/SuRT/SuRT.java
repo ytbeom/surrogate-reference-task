@@ -153,7 +153,7 @@ public class SuRT extends JFrame {
 					MakePositionSet();
 				}
 			}
-			else if (e.getKeyCode() == 27) {
+			else if (e.getKeyCode() == 27 || e.getKeyCode() == 8) {
 				try {
 					bufferedWriter.close();
 				} catch (IOException e1) {
@@ -179,16 +179,21 @@ public class SuRT extends JFrame {
 		@Override
 		public void mouseClicked(MouseEvent e) {
 			// TODO Auto-generated method stub
-			confirmedRegion = (int)(e.getX()/(SuRT.super.getWidth()/numRegion));
-			endTime = System.currentTimeMillis();
-			SaveSuRTResult();
-			MakePositionSet();
+
 		}
 
 		@Override
 		public void mousePressed(MouseEvent e) {
 			// TODO Auto-generated method stub
-			
+			for (int i=0; i<numRegion; i++) {
+				if (e.getX() >= regionArray.get(i).getLeftX() && e.getX() <= regionArray.get(i).getRightX()) {
+					confirmedRegion = i;
+					break;
+				}
+			}
+			endTime = System.currentTimeMillis();
+			SaveSuRTResult();
+			MakePositionSet();
 		}
 
 		@Override
@@ -298,7 +303,7 @@ public class SuRT extends JFrame {
 				else {
 					g2.setColor(Color.WHITE);
 				}
-				g2.fillRect(regionWidth*i, 0, regionWidth, regionHeight);
+				g2.fillRect(regionArray.get(i).getLeftX(), 0, regionArray.get(i).getRightX(), regionHeight);
 
 				Region region = regionArray.get(i);
 				g2.setStroke(new BasicStroke(circleLineWidth));
@@ -331,8 +336,10 @@ public class SuRT extends JFrame {
 		
 		Random random = new Random();
 		for (int i=0; i<numRegion; i++) {
-			Region region = new Region(false, false, positionPerRegion);
-			regionArray.add(region);
+			int leftX = i == 0 ? 0 : regionArray.get(i-1).getRightX() + 1;
+			int rightX = super.getWidth()*(i+1)/numRegion;
+			Region region = new Region(false, false, positionPerRegion, leftX, rightX);
+			regionArray.add(region);				
 		}
 		
 		for (int i=0; i<remainedNumPosition; i++) {
