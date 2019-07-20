@@ -89,7 +89,7 @@ public class SuRT extends JFrame {
 			// Column Header 저장
 			String line = bufferedReader.readLine();
 			String columnHeaderArray[] = line.split(",");
-			bufferedWriter.write("Experiment start time" + ",");
+			bufferedWriter.write("Experiment Start Time" + ",");
 			for (int i=0; i<columnHeaderArray.length; i++)
 				bufferedWriter.write(columnHeaderArray[i] + ",");
 			bufferedWriter.newLine();
@@ -113,9 +113,9 @@ public class SuRT extends JFrame {
 			
 			// 결과 column Header 저장
 			bufferedWriter.newLine();
-			bufferedWriter.write("experiment set start time" + ",");
-			bufferedWriter.write("response time" + ",");
-			bufferedWriter.write("success" + ",");
+			bufferedWriter.write("Set Start Time" + ",");
+			bufferedWriter.write("Response Time" + ",");
+			bufferedWriter.write("Success" + ",");
 			bufferedWriter.newLine();
 			bufferedWriter.flush();
 			
@@ -296,15 +296,17 @@ public class SuRT extends JFrame {
 		if (positionSetCompleted) {
 			int regionHeight = super.getHeight();
 			for (int i=0; i<numRegion; i++) {
+				Region region = regionArray.get(i);
+				System.out.println(region.getLeftX()+ ", "+region.getRightX()+", "+g2.getColor());
 				if (i==confirmedRegion) {
 					g2.setColor(new Color(160, 160, 160));
 				}
 				else {
 					g2.setColor(Color.WHITE);
 				}
-				g2.fillRect(regionArray.get(i).getLeftX(), 0, regionArray.get(i).getRightX(), regionHeight);
+				g2.fillRect(region.getLeftX(), 0, region.getRightX()-region.getLeftX()+1, regionHeight);
+				
 
-				Region region = regionArray.get(i);
 				g2.setStroke(new BasicStroke(circleLineWidth));
 				g2.setColor(Color.BLACK);
 				for (int j=0; j<region.getNumDistractor(); j++) {
@@ -338,8 +340,9 @@ public class SuRT extends JFrame {
 			int leftX = i == 0 ? 0 : regionArray.get(i-1).getRightX() + 1;
 			int rightX = super.getWidth()*(i+1)/numRegion;
 			Region region = new Region(false, false, positionPerRegion, leftX, rightX);
-			regionArray.add(region);				
+			regionArray.add(region);
 		}
+		
 		
 		for (int i=0; i<remainedNumPosition; i++) {
 			regionArray.get(random.nextInt(numRegion)).increaseNumDistractor();
