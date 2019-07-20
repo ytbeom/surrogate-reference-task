@@ -294,7 +294,6 @@ public class SuRT extends JFrame {
 		Graphics2D g2 = (Graphics2D)img_g;
 		
 		if (positionSetCompleted) {
-			int regionWidth = super.getWidth()/numRegion;
 			int regionHeight = super.getHeight();
 			for (int i=0; i<numRegion; i++) {
 				if (i==confirmedRegion) {
