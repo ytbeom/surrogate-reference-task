@@ -14,14 +14,16 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import java.awt.BasicStroke;
-import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -29,10 +31,18 @@ import java.awt.event.MouseListener;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.WindowConstants;
+
+import net.java.games.input.Controller;
+import net.java.games.input.ControllerEnvironment;
+import net.java.games.input.Component.Identifier;
 
 
 public class SuRT extends JFrame {
@@ -56,18 +66,33 @@ public class SuRT extends JFrame {
 	private int numTask;
 	private int countTask;	
 	
+	private boolean isControllerUsed = false;
+	private Controller targetController;
+	private Identifier targetLeftRightComponentIdentifier;
+	private float leftLowerBound;
+	private float leftUpperBound;
+	private float rightLowerBound;
+	private float rightUpperBound;
+	private Identifier targetConfirmComponentIdentifier;
+	private float confirmLowerBound;
+	private float confirmUpperBound;
+	private ControllerListenerThread controllerListenerThread;
+	
 	private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 	private long startTime;
 	private long endTime;
+	private long pauseStartTime;
+	private long pausedTime;
+	
+	private BufferedReader bufferedReader;
 	private BufferedWriter bufferedWriter;
 	
 	public SuRT(String inputFileName) {
 		super("Life Enhancing Technology Lab. - Surrogate Reference Task");
-		
+	
 		this.setUndecorated(true);
 		this.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		this.setVisible(true);
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.addKeyListener(new MainKeyListener());
 		this.addMouseListener(new MainMouseListener());
 		this.setFocusable(true);
@@ -75,11 +100,10 @@ public class SuRT extends JFrame {
 		SettingDialog dialog = new SettingDialog(this);
 		dialog.setVisible(true);
 		countTask = 0;
-
+		
 		try {
 			File inputFile = new File(inputFileName);
-			BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
-			
+			bufferedReader = new BufferedReader(new FileReader(inputFile));
 			String outputFileName = participantName+".csv";
 			File outputFile = new File(outputFileName);
 			if(outputFile.exists() == false) 
@@ -110,6 +134,16 @@ public class SuRT extends JFrame {
 			targetSize = Integer.parseInt(array[2]);
 			numRegion = Integer.parseInt(array[3]);
 			circleLineWidth = Float.parseFloat(array[4]);
+			if (isControllerUsed) {
+				targetLeftRightComponentIdentifier = targetController.getComponents()[Integer.parseInt(array[5])].getIdentifier();
+				leftLowerBound = Float.parseFloat(array[6]);
+				leftUpperBound = Float.parseFloat(array[7]);
+				rightLowerBound = Float.parseFloat(array[8]);
+				rightUpperBound = Float.parseFloat(array[9]);
+				targetLeftRightComponentIdentifier = targetController.getComponents()[Integer.parseInt(array[10])].getIdentifier();
+				confirmLowerBound = Float.parseFloat(array[11]);
+				confirmUpperBound = Float.parseFloat(array[12]);
+			}
 			
 			// 결과 column Header 저장
 			bufferedWriter.newLine();
@@ -126,8 +160,26 @@ public class SuRT extends JFrame {
 			e.printStackTrace();
 		}
 		
+		pausedTime = 0;
+		if (isControllerUsed) {
+			controllerListenerThread = new ControllerListenerThread();
+			controllerListenerThread.setStop(false);
+			controllerListenerThread.start();
+		}
+		
 		MakePositionSet();
 	}
+	
+	public void OpenPauseDialog() {
+		PauseDialog pauseDialog = new PauseDialog(this);
+		pauseDialog.setVisible(true);
+	}
+	
+	public void OpenQuitDialog() {
+		QuitDialog quitDialog = new QuitDialog(this);
+		quitDialog.setVisible(true);
+	}
+	
 	
 	class MainKeyListener implements KeyListener {
 		@Override
@@ -154,13 +206,8 @@ public class SuRT extends JFrame {
 				}
 			}
 			else if (e.getKeyCode() == 27 || e.getKeyCode() == 8) {
-				try {
-					bufferedWriter.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				System.exit(0);
+				pauseStartTime = System.currentTimeMillis();
+				OpenPauseDialog();
 			}
 		}
 		
@@ -218,13 +265,25 @@ public class SuRT extends JFrame {
 	class SettingDialog extends JDialog {
 		private static final long serialVersionUID = 1L;
 		
-		private int width = 500;
-		private int height = 150;
-		private JLabel participantNameLabel = new JLabel("Participant Name: ", JLabel.CENTER);
-		private JTextField participantNameTextField = new JTextField(10);
-		private JLabel numTaskLabel = new JLabel("# of Trial: ", JLabel.CENTER);
-		private JTextField numTaskTextField = new JTextField(10);
+		private int width = 600;
+		private int height = 230;
+		
+		private JPanel firstRowPanel = new JPanel();
+		private JLabel participantNameLabel = new JLabel("Participant Name: ", JLabel.LEFT);
+		private JTextField participantNameTextField = new JTextField();
+		private JLabel numTaskLabel = new JLabel("# of Trial: ", JLabel.LEFT);
+		private JTextField numTaskTextField = new JTextField();
+		
+		private JPanel secondRowPanel = new JPanel();
+		private JLabel controllerInputLabel = new JLabel("Controller Input", JLabel.LEFT);
+		private JCheckBox controllerCheckBox = new JCheckBox("", false);
+		private JLabel emptyLabel = new JLabel("", JLabel.LEFT);
+		
+		private JPanel thirdRowPanel = new JPanel();
+		private JComboBox<String> controllerCombo;
+		private Controller[] controllers = {};
 		private JButton okButton = new JButton("OK");
+		
 		private URL lineImageURL = SettingDialog.class.getClassLoader().getResource("Line.png");
 		private ImageIcon lineImageIcon = new ImageIcon(lineImageURL);
 		private Image lineImage = lineImageIcon.getImage().getScaledInstance(width-40, 15, java.awt.Image.SCALE_SMOOTH);
@@ -240,12 +299,56 @@ public class SuRT extends JFrame {
 			setSize(width, height);
 			setLocation((SuRT.super.getWidth()-width)/2, (SuRT.super.getHeight()-height)/2);
 			this.setFocusable(true);
+			this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 			
-			add(participantNameLabel, BorderLayout.CENTER);
-			add(participantNameTextField);
-			add(numTaskLabel, BorderLayout.CENTER);
-			add(numTaskTextField);
-			add(okButton);
+			firstRowPanel.setLayout(new FlowLayout());
+			firstRowPanel.setPreferredSize(new Dimension(600, 30));
+			participantNameLabel.setPreferredSize(new Dimension(120, 20));
+			firstRowPanel.add(participantNameLabel);
+			participantNameTextField.setPreferredSize(new Dimension(160, 20));
+			firstRowPanel.add(participantNameTextField);
+			numTaskLabel.setPreferredSize(new Dimension(120, 20));
+			firstRowPanel.add(numTaskLabel);
+			numTaskTextField.setPreferredSize(new Dimension(160, 20));
+			firstRowPanel.add(numTaskTextField);
+			
+			secondRowPanel.setLayout(new FlowLayout());
+			secondRowPanel.setPreferredSize(new Dimension(600, 30));
+			controllerInputLabel.setPreferredSize(new Dimension(120, 20));
+			secondRowPanel.add(controllerInputLabel);
+			controllerCheckBox.setPreferredSize(new Dimension(20, 20));
+			secondRowPanel.add(controllerCheckBox);
+			emptyLabel.setPreferredSize(new Dimension(425, 20));
+			secondRowPanel.add(emptyLabel);
+			
+			String[] controllerName = {};
+			controllers = ControllerEnvironment.getDefaultEnvironment().getControllers();
+			controllerName = new String[controllers.length];		
+			for (int i = 0; i<controllerName.length; i++) {
+				controllerName[i] = controllers[i].getName();
+			}
+			controllerCombo = new JComboBox<String>(controllerName);
+			controllerCombo.setEnabled(false);
+
+			thirdRowPanel.setLayout(new FlowLayout());
+			thirdRowPanel.setPreferredSize(new Dimension(600, 30));
+			controllerCombo.setPreferredSize(new Dimension(510, 20));
+			thirdRowPanel.add(controllerCombo);
+			okButton.setPreferredSize(new Dimension(60, 20));
+			thirdRowPanel.add(okButton);
+			
+			controllerCheckBox.addItemListener(new ItemListener() {
+				public void itemStateChanged(ItemEvent e) {
+					if (e.getStateChange() == 1)
+						controllerCombo.setEnabled(true);
+					else
+						controllerCombo.setEnabled(false);
+				}
+			});
+			
+			add(firstRowPanel, "North");
+			add(secondRowPanel, "North");
+			add(thirdRowPanel, "North");
 			add(lineImageBox);
 			add(logoImageBox);
 			
@@ -284,7 +387,105 @@ public class SuRT extends JFrame {
 			else
 				numTask = Integer.parseInt(numTaskString);
 			
-			this.setVisible(false);
+			if (controllerCheckBox.isSelected()) {
+				isControllerUsed = true;
+				targetController = controllers[controllerCombo.getSelectedIndex()];		
+			}
+			
+			dispose();
+		}
+	}
+	
+	class PauseDialog extends JDialog {
+		private static final long serialVersionUID = 1L;
+		
+		private int width = 250;
+		private int height = 70;
+		
+		private JButton continueButton = new JButton("Continue");
+		private JButton quitButton = new JButton("Quit");
+		
+		public PauseDialog(JFrame frame) {
+			super(frame, "", true);
+			setLayout(new FlowLayout());
+			setSize(width, height);
+			setLocation((SuRT.super.getWidth()-width)/2, (SuRT.super.getHeight()-height)/2);
+			this.setFocusable(true);
+			this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+			
+			continueButton.setPreferredSize(new Dimension(100, 20));
+			quitButton.setPreferredSize(new Dimension(100, 20));
+			add(continueButton);
+			add(quitButton);
+			
+			continueButton.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					pausedTime = System.currentTimeMillis() - pauseStartTime;
+					dispose();
+				}
+			});
+			
+			quitButton.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					Quit();
+				}
+			});
+			
+			KeyListener escListener = new KeyListener() {
+				public void keyPressed(KeyEvent e) {
+					if (e.getKeyCode() == 27) {
+						pausedTime = System.currentTimeMillis() - pauseStartTime;
+						setVisible(false);
+					}
+				}
+				
+				@Override
+				public void keyTyped(KeyEvent e) {}
+
+				@Override
+				public void keyReleased(KeyEvent e) {}
+			};
+			
+			this.addKeyListener(escListener);
+		}
+	}
+	
+	class QuitDialog extends JDialog {
+		private static final long serialVersionUID = 1L;
+		
+		private int width = 250;
+		private int height = 70;
+		
+		private JButton newTrialButton = new JButton("New Trial");
+		private JButton quitButton = new JButton("Quit");
+		
+		public QuitDialog(JFrame frame) {
+			super(frame, "", true);
+			setLayout(new FlowLayout());
+			setSize(width, height);
+			setLocation((SuRT.super.getWidth()-width)/2, (SuRT.super.getHeight()-height)/2);
+			this.setFocusable(true);
+			this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+			
+			newTrialButton.setPreferredSize(new Dimension(100, 20));
+			quitButton.setPreferredSize(new Dimension(100, 20));
+			add(newTrialButton);
+			add(quitButton);
+			
+			newTrialButton.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					setVisible(false);
+					dispose();
+					@SuppressWarnings("unused")
+					SuRT surt = new SuRT("SuRTsetting.csv");
+				}
+			});
+			
+			quitButton.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					Quit();
+				}
+			});
 		}
 	}
 	
@@ -297,7 +498,6 @@ public class SuRT extends JFrame {
 			int regionHeight = super.getHeight();
 			for (int i=0; i<numRegion; i++) {
 				Region region = regionArray.get(i);
-				System.out.println(region.getLeftX()+ ", "+region.getRightX()+", "+g2.getColor());
 				if (i==confirmedRegion) {
 					g2.setColor(new Color(160, 160, 160));
 				}
@@ -401,7 +601,7 @@ public class SuRT extends JFrame {
 	}
 	
 	public void SaveSuRTResult() {
-		long responseTime = endTime - startTime;
+		long responseTime = endTime - startTime - pausedTime;
 		boolean success = regionArray.get(confirmedRegion).getIsTargetRegion();
 		
 		try {
@@ -411,16 +611,74 @@ public class SuRT extends JFrame {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		pausedTime = 0;
 		
 		countTask++;
 		if (countTask == numTask) {
-			try {
-				bufferedWriter.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			OpenQuitDialog();
+		}
+	}
+	
+	public void Quit() {
+		// Close BufferedWriter
+		try {
+			bufferedWriter.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// Stop controllerListener
+		if (isControllerUsed)
+			controllerListenerThread.setStop(true);
+		try {
+			bufferedWriter.close();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		System.exit(0);
+	}
+	
+	class ControllerListenerThread extends Thread {
+		private boolean stop;
+		
+		public void setStop(boolean stop) {
+			this.stop = stop;
+		}
+		
+		public void run() {
+			while (!stop) {
+				try {
+					Thread.sleep(20);
+				} catch (Exception e) {}
+				targetController.poll();
+				
+				float leftRightPolledData = targetController.getComponent(targetLeftRightComponentIdentifier).getPollData();
+				float confirmPolledData = targetController.getComponent(targetConfirmComponentIdentifier).getPollData();
+				if (leftRightPolledData >= leftLowerBound && leftRightPolledData <= leftUpperBound) {
+					if (confirmedRegion != -1)
+						confirmedRegion = (confirmedRegion == 0)? 0 : confirmedRegion-1;
+					else
+						confirmedRegion = (numRegion-1)/2;
+					repaint();
+				}
+				else if (leftRightPolledData >= rightLowerBound && leftRightPolledData <= rightUpperBound) {
+					if (confirmedRegion != -1)
+						confirmedRegion = (confirmedRegion == numRegion-1)? numRegion-1 : confirmedRegion+1;
+					else
+						confirmedRegion = numRegion/2;
+					repaint();
+				}
+				else if (confirmPolledData >= confirmLowerBound && confirmPolledData <= confirmUpperBound) {
+					if (confirmedRegion != -1) {
+						endTime = System.currentTimeMillis();
+						SaveSuRTResult();
+						MakePositionSet();
+					}
+				}
 			}
-			System.exit(0);
 		}
 	}
 	
