@@ -150,7 +150,7 @@ public class SuRT extends JFrame {
 			bufferedWriter.write("Set Start Time" + ",");
 			bufferedWriter.write("Response Time" + ",");
 			bufferedWriter.write("Success" + ",");
-			bufferedWriter.newLine();
+			bufferedWriter.newLine(); 
 			bufferedWriter.flush();
 			
 			bufferedReader.close();
