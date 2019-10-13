@@ -158,7 +158,7 @@ public class SuRT extends JFrame {
 			e.printStackTrace();
 		} catch(IOException e) {
 			e.printStackTrace();
-		}
+		} 
 		
 		pausedTime = 0;
 		if (isControllerUsed) {
