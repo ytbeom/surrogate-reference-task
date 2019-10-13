@@ -1,0 +1,14 @@
+#Fat Jar Configuration File
+#Sun Oct 13 19:41:39 KST 2019
+onejar.license.required=true
+manifest.classpath=
+manifest.removesigners=true
+onejar.checkbox=false
+jarname=C\:\\Users\\ytbeo\\Desktop\\SuRT_fat7.jar
+manifest.mergeall=true
+manifest.mainclass=SuRT.SuRT
+manifest.file=<createnew>
+jarname.isextern=true
+onejar.expand=
+excludes=
+includes=<inc|SuRT/libs>

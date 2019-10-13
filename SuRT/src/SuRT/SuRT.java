@@ -87,7 +87,7 @@ public class SuRT extends JFrame {
 	private BufferedReader bufferedReader;
 	private BufferedWriter bufferedWriter;
 	
-	public SuRT(String inputFileName) {
+	public SuRT(String inputFileName) {		
 		super("Life Enhancing Technology Lab. - Surrogate Reference Task");
 	
 		this.setUndecorated(true);
@@ -110,7 +110,7 @@ public class SuRT extends JFrame {
 				outputFile.createNewFile();
 			bufferedWriter = new BufferedWriter(new FileWriter(outputFile, true));
 			
-			// Column Header 저장
+			// Save column headers
 			String line = bufferedReader.readLine();
 			String columnHeaderArray[] = line.split(",");
 			bufferedWriter.write("Experiment Start Time" + ",");
@@ -119,7 +119,7 @@ public class SuRT extends JFrame {
 			bufferedWriter.newLine();
 			bufferedWriter.flush();
 			
-			// Parameter Value 저장
+			// Save parameter values
 			line = bufferedReader.readLine();
 			String array[] = line.split(",");
 			bufferedWriter.write(format.format(System.currentTimeMillis()) + ",");
@@ -128,7 +128,7 @@ public class SuRT extends JFrame {
 			bufferedWriter.newLine();
 			bufferedWriter.flush();
 			
-			// Parameter 세팅
+			// Load parameters
 			numDistractor = Integer.parseInt(array[0]);
 			distractorSize = Integer.parseInt(array[1]);
 			targetSize = Integer.parseInt(array[2]);
@@ -145,7 +145,7 @@ public class SuRT extends JFrame {
 				confirmUpperBound = Float.parseFloat(array[12]);
 			}
 			
-			// 결과 column Header 저장
+			// Write additional column header
 			bufferedWriter.newLine();
 			bufferedWriter.write("Set Start Time" + ",");
 			bufferedWriter.write("Response Time" + ",");
@@ -631,12 +631,6 @@ public class SuRT extends JFrame {
 		// Stop controllerListener
 		if (isControllerUsed)
 			controllerListenerThread.setStop(true);
-		try {
-			bufferedWriter.close();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
 		
 		System.exit(0);
 	}
