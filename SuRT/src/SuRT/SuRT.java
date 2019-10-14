@@ -140,7 +140,7 @@ public class SuRT extends JFrame {
 				leftUpperBound = Float.parseFloat(array[7]);
 				rightLowerBound = Float.parseFloat(array[8]);
 				rightUpperBound = Float.parseFloat(array[9]);
-				targetLeftRightComponentIdentifier = targetController.getComponents()[Integer.parseInt(array[10])].getIdentifier();
+				targetConfirmComponentIdentifier = targetController.getComponents()[Integer.parseInt(array[10])].getIdentifier();
 				confirmLowerBound = Float.parseFloat(array[11]);
 				confirmUpperBound = Float.parseFloat(array[12]);
 			}
@@ -325,7 +325,7 @@ public class SuRT extends JFrame {
 			controllers = ControllerEnvironment.getDefaultEnvironment().getControllers();
 			controllerName = new String[controllers.length];		
 			for (int i = 0; i<controllerName.length; i++) {
-				controllerName[i] = controllers[i].getName();
+				controllerName[i] = controllers[i].getName() + " / " + controllers[i].getType();
 			}
 			controllerCombo = new JComboBox<String>(controllerName);
 			controllerCombo.setEnabled(false);
@@ -645,7 +645,7 @@ public class SuRT extends JFrame {
 		public void run() {
 			while (!stop) {
 				try {
-					Thread.sleep(20);
+					Thread.sleep(100);
 				} catch (Exception e) {}
 				targetController.poll();
 				
